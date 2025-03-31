@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package file;
 
-option go_package = "github.com/shyywie/grpc-file-server/proto;file";
+option go_package = "github.com/Shyyw1e/grpc-file-server/proto;file";
 
 service FileService {
   rpc UploadFile(stream FileChunk) returns (UploadStatus);
