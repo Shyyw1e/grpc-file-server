@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package file;
+
+option go_package = "github.com/shyywie/grpc-file-server/proto;file";
+
+service FileService {
+  rpc UploadFile(stream FileChunk) returns (UploadStatus);
+  rpc DownloadFile(FileRequest) returns (stream FileChunk);
+  rpc ListFiles(Empty) returns (stream FileInfo);
+}
+
+message FileChunk {
+  string filename = 1;
+  bytes content = 2;
+}
+
+message UploadStatus {
+  string message = 1;
+  bool success = 2;
+}
+
+message FileRequest {
+  string filename = 1;
+}
+
+message FileInfo {
+  string filename = 1;
+  string created_at = 2;
+  string updated_at = 3;
+}
+
+message Empty {}
