@@ -1,4 +1,4 @@
-module shyywie/grpc-file-server
+module grpc-file-server
 
 go 1.24.1
 
