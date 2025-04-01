@@ -1,20 +1,24 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net"
 
+	"grpc-file-server/internal/limiter"
+	"grpc-file-server/internal/logger"
+	"grpc-file-server/internal/server"
+	pb "grpc-file-server/proto"
 
 	"google.golang.org/grpc"
-	pb "grpc-file-server/proto"
-	"grpc-file-server/internal/server"
-	"grpc-file-server/internal/limiter"
 )
 
 func main() {
+	log := logger.NewLogger()
+	slog.SetDefault(log)
+
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
-		log.Fatalf("Can't listen tcp server: %s", err)
+		slog.Error("failed to listen", slog.String("error", err.Error()))
 	}
 	
 	grpcServer := grpc.NewServer()
@@ -27,11 +31,11 @@ func main() {
 
 	pb.RegisterFileServiceServer(grpcServer, srv)
 
-	log.Println("gRPC server is running on port: 50051")
+	slog.Info("gRPC server is running", slog.String("port", ":50051"))
 
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %s", err)
+		slog.Error("failed to serve", slog.String("error", err.Error()))
 	}
 }
 
