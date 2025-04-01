@@ -2,7 +2,6 @@ package server
 
 import (
 	
-	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -118,7 +117,8 @@ func (s *FileServer)ListFiles(_ *pb.Empty, stream pb.FileService_ListFilesServer
 
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		 return fmt.Errorf("failed to read storage directory: %s", err)
+		slog.Error("Failed to read storage directory", slog.String("error", err.Error()))
+		return err
 	}
 
 	for _, entry := range entries {
@@ -128,6 +128,7 @@ func (s *FileServer)ListFiles(_ *pb.Empty, stream pb.FileService_ListFilesServer
 
 		info, err := entry.Info()
 		if err != nil {
+			slog.Warn("Failed to get file info", slog.String("file", entry.Name()))
 			continue
 		}
 		modtime := info.ModTime().Format(time.RFC3339)
@@ -138,9 +139,11 @@ func (s *FileServer)ListFiles(_ *pb.Empty, stream pb.FileService_ListFilesServer
 			UpdatedAt: modtime,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to send file info: %s", err)
+			slog.Error("Failed to send file info", slog.String("error", err.Error()))
+			return err
 		}
 	}
 	
+	slog.Info("ListFiles finished")
 	return nil
 }
