@@ -4,6 +4,7 @@ import (
 	
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
@@ -27,28 +28,36 @@ func (s *FileServer)UploadFile(stream pb.FileService_UploadFileServer) error {
 	var file *os.File
 	var filename string
 
+	slog.Info("Upload started")
+
+
 	for  {
 		chunk, err := stream.Recv()
 		if err == io.EOF {
+			slog.Info("Upload finished", slog.String("filename", filename))
 			return stream.SendAndClose(&pb.UploadStatus{
 				Message: "File uploaded succesfully",
 				Success: true,
 			})
 		}
 		if err != nil {
+			slog.Error("Failed to receive chunk", slog.String("error", err.Error()))
 			return err
 		}
 		if file == nil {
 			filename = filepath.Base(chunk.GetFilename())
 			path := filepath.Join("storage", filename)
-			file, err := os.Create(path)
+			slog.Info("Creating file", slog.String("path", path))
+			file, err = os.Create(path)
 			if err != nil {
-				return nil
+				slog.Error("Failed to create file", slog.String("error", err.Error()))
+				return err
 			}
 			defer file.Close()
 		}
 
 		if _, err := file.Write(chunk.GetContent()); err != nil {
+			slog.Error("Failed to write to file", slog.String("error", err.Error()))
 			return err
 		}
 	}
@@ -63,11 +72,14 @@ func (s *FileServer)DownloadFile(req *pb.FileRequest,stream pb.FileService_Downl
 
 	file, err := os.Open(path)
 	if err != nil {
-		return fmt.Errorf("failed to open file: %s", err)
+		slog.Error("Failed to open file", slog.String("error", err.Error()))
+			return err
 	}
 	defer file.Close()
 
 	buf := make([]byte, 1024 * 32)
+
+	slog.Info("Download started", slog.String("filename", filename))
 
 	for {
 		n, err := file.Read(buf)
@@ -76,7 +88,8 @@ func (s *FileServer)DownloadFile(req *pb.FileRequest,stream pb.FileService_Downl
 		}
 		
 		if err != nil {
-			return fmt.Errorf("failed to read file: %s",err)
+			slog.Error("Failed to read file", slog.String("error", err.Error()))
+			return err
 		}
 
 		err = stream.Send(&pb.FileChunk{
@@ -84,13 +97,15 @@ func (s *FileServer)DownloadFile(req *pb.FileRequest,stream pb.FileService_Downl
 			Content: buf[:n],
 		})
 		if err != nil {
-			return fmt.Errorf("failed to send chunk: %s", err)
+			slog.Error("Failed to send chunk", slog.String("error", err.Error()))
+			return err
 		}
 
 
 	
 	}
 
+	slog.Info("Download completed", slog.String("filename", filename))
 	return nil
 }
 
