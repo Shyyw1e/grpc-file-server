@@ -8,14 +8,22 @@ import (
 	"path/filepath"
 	"time"
 
+	"grpc-file-server/internal/limiter"
 	pb "grpc-file-server/proto"
 )
 
 type FileServer struct {
 	pb.UnimplementedFileServiceServer
+	UploadLimiter limiter.Semafore
+	DownloadLimiter limiter.Semafore
+	ListLimiter limiter.Semafore
+	
 }
 
 func (s *FileServer)UploadFile(stream pb.FileService_UploadFileServer) error {
+	s.UploadLimiter.Acquire()
+	defer s.UploadLimiter.Release()
+
 	var file *os.File
 	var filename string
 
@@ -47,6 +55,9 @@ func (s *FileServer)UploadFile(stream pb.FileService_UploadFileServer) error {
 }
 
 func (s *FileServer)DownloadFile(req *pb.FileRequest,stream pb.FileService_DownloadFileServer) error {
+	s.DownloadLimiter.Acquire()
+	defer s.DownloadLimiter.Release()
+
 	filename := filepath.Base(req.GetFilename())
 	path := filepath.Join("storage", filename)
 
@@ -85,6 +96,9 @@ func (s *FileServer)DownloadFile(req *pb.FileRequest,stream pb.FileService_Downl
 
 
 func (s *FileServer)ListFiles(_ *pb.Empty, stream pb.FileService_ListFilesServer) error {
+	s.ListLimiter.Acquire()
+	defer s.ListLimiter.Release()
+
 	dir := "storage"
 
 	entries, err := os.ReadDir(dir)

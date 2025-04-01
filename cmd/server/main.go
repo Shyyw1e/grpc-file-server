@@ -7,11 +7,9 @@ import (
 
 	"google.golang.org/grpc"
 	pb "grpc-file-server/proto"
+	"grpc-file-server/internal/server"
+	"grpc-file-server/internal/limiter"
 )
-
-type server struct {
-	pb.UnimplementedFileServiceServer
-}
 
 func main() {
 	lis, err := net.Listen("tcp", ":50051")
@@ -21,7 +19,13 @@ func main() {
 	
 	grpcServer := grpc.NewServer()
 
-	pb.RegisterFileServiceServer(grpcServer, &server{})
+	srv := &server.FileServer{
+		UploadLimiter: limiter.NewSemafore(10),
+		DownloadLimiter: limiter.NewSemafore(10),
+		ListLimiter: limiter.NewSemafore(100),
+	}
+
+	pb.RegisterFileServiceServer(grpcServer, srv)
 
 	log.Println("gRPC server is running on port: 50051")
 
