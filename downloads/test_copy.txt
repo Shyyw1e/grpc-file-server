@@ -1,0 +1,11 @@
+Hello from grpc-file-server
+
+This is a test file used to validate the UploadFile and DownloadFile methods.
+
+Contents:
+- Basic English text
+- Multiple lines
+- Special characters: !@#$%^&*()_+
+- UTF-8 test: Привет, 你好, مرحبا
+
+End of file 

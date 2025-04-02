@@ -24,9 +24,9 @@ func main() {
 	grpcServer := grpc.NewServer()
 
 	srv := &server.FileServer{
-		UploadLimiter: limiter.NewSemafore(10),
-		DownloadLimiter: limiter.NewSemafore(10),
-		ListLimiter: limiter.NewSemafore(100),
+		UploadLimiter: limiter.NewSemaphore(10),
+		DownloadLimiter: limiter.NewSemaphore(10),
+		ListLimiter: limiter.NewSemaphore(100),
 	}
 
 	pb.RegisterFileServiceServer(grpcServer, srv)

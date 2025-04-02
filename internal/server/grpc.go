@@ -14,9 +14,9 @@ import (
 
 type FileServer struct {
 	pb.UnimplementedFileServiceServer
-	UploadLimiter limiter.Semafore
-	DownloadLimiter limiter.Semafore
-	ListLimiter limiter.Semafore
+	UploadLimiter limiter.Semaphore
+	DownloadLimiter limiter.Semaphore
+	ListLimiter limiter.Semaphore
 	
 }
 

@@ -1,17 +1,26 @@
 package limiter
 
+import "context"
 
-type Semafore chan struct{}
+type Semaphore chan struct{}
 
-func NewSemafore(limit int) Semafore {
+func NewSemaphore(limit int) Semaphore {
 	return make(chan struct{}, limit)
 }
 
-func (s Semafore)Acquire() {
-	s <-struct{}{}
+func (s Semaphore) Acquire() {
+	s <- struct{}{}
 }
 
-func (s Semafore) Release() {
+func (s Semaphore) Release() {
 	<-s
 }
 
+func (s Semaphore) TryAcquire(ctx context.Context) bool {
+	select {
+	case s <- struct{}{}:
+		return true
+	case <-ctx.Done():
+		return false
+	}
+}
